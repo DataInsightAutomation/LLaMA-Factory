@@ -52,6 +52,7 @@ from ..extras.constants import CHOICES, SUBJECTS
 from ..hparams import get_eval_args
 from ..model import load_model, load_tokenizer
 from .template import get_eval_template
+from ..extras.misc import use_modelscope, use_openmind
 
 
 if TYPE_CHECKING:
