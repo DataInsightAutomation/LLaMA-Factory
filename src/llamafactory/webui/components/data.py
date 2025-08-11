@@ -40,21 +40,32 @@ def next_page(page_index: int, total_num: int) -> int:
 
 
 def can_preview(dataset_dir: str, dataset: list) -> "gr.Button":
-    r"""Check if the dataset is a local dataset."""
+    r"""Check if the dataset is a local dataset or a dict config."""
     try:
-        with open(os.path.join(dataset_dir, DATA_CONFIG), encoding="utf-8") as f:
-            dataset_info = json.load(f)
+        dataset_info = json.loads(dataset_dir)
+        is_dict = isinstance(dataset_info, dict)
     except Exception:
-        return gr.Button(interactive=False)
+        is_dict = False
 
-    if len(dataset) == 0 or "file_name" not in dataset_info[dataset[0]]:
-        return gr.Button(interactive=False)
-
-    data_path = os.path.join(dataset_dir, dataset_info[dataset[0]]["file_name"])
-    if os.path.isfile(data_path) or (os.path.isdir(data_path) and os.listdir(data_path)):
+    if is_dict:
+        if len(dataset) == 0 or "file_name" not in dataset_info.get(dataset[0], {}):
+            return gr.Button(interactive=False)
         return gr.Button(interactive=True)
     else:
-        return gr.Button(interactive=False)
+        try:
+            with open(os.path.join(dataset_dir, DATA_CONFIG), encoding="utf-8") as f:
+                dataset_info = json.load(f)
+        except Exception:
+            return gr.Button(interactive=False)
+
+        if len(dataset) == 0 or "file_name" not in dataset_info[dataset[0]]:
+            return gr.Button(interactive=False)
+
+        data_path = os.path.join(dataset_dir, dataset_info[dataset[0]]["file_name"])
+        if os.path.isfile(data_path) or (os.path.isdir(data_path) and os.listdir(data_path)):
+            return gr.Button(interactive=True)
+        else:
+            return gr.Button(interactive=False)
 
 
 def _load_data_file(file_path: str) -> list[Any]:
@@ -69,6 +80,14 @@ def _load_data_file(file_path: str) -> list[Any]:
 
 def get_preview(dataset_dir: str, dataset: list, page_index: int) -> tuple[int, list, "gr.Column"]:
     r"""Get the preview samples from the dataset."""
+
+    try:
+        dataset_info = json.loads(dataset_dir)
+        is_dict = isinstance(dataset_info, dict)
+    except Exception:
+        is_dict = False
+    if is_dict:
+        dataset_dir = 'data'
     with open(os.path.join(dataset_dir, DATA_CONFIG), encoding="utf-8") as f:
         dataset_info = json.load(f)
 

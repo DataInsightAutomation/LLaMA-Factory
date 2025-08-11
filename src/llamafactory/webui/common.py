@@ -138,11 +138,17 @@ def is_multimodal(model_name: str) -> bool:
 
 
 def load_dataset_info(dataset_dir: str) -> dict[str, dict[str, Any]]:
-    r"""Load dataset_info.json."""
+    r"""Load dataset_info.json or parse JSON string."""
     if dataset_dir == "ONLINE" or dataset_dir.startswith("REMOTE:"):
         logger.info_rank0(f"dataset_dir is {dataset_dir}, using online dataset.")
         return {}
-
+    try:
+        # Try to parse as JSON string
+        dataset_info = json.loads(dataset_dir)
+        if isinstance(dataset_info, dict):
+            return dataset_info
+    except Exception as e:
+        pass
     try:
         with open(os.path.join(dataset_dir, DATA_CONFIG), encoding="utf-8") as f:
             return json.load(f)
