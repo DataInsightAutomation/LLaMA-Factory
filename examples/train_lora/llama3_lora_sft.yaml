@@ -1,5 +1,6 @@
 ### model
-model_name_or_path: meta-llama/Meta-Llama-3-8B-Instruct
+# gdb --args python /home/dut7071/lun/LLaMA-Factory/src/train.py examples/train_lora/llama3_lora_sft.yaml 
+model_name_or_path: llamafactory/tiny-random-Llama-3
 trust_remote_code: true
 
 ### method
@@ -39,7 +40,6 @@ ddp_timeout: 180000000
 resume_from_checkpoint: null
 
 ### eval
-# eval_dataset: alpaca_en_demo
 # val_size: 0.1
 # per_device_eval_batch_size: 1
 # eval_strategy: steps

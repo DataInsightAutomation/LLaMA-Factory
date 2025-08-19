@@ -1,0 +1,145 @@
+# Real working YAML configuration for LLaMA-Factory training with custom callbacks
+# This file demonstrates how to use custom callbacks in actual training
+
+# ============================================================================
+# BASIC TRAINING CONFIGURATION
+# ============================================================================
+
+# Model and dataset settings
+model_name_or_path: "meta-llama/Llama-2-7b-hf"
+dataset: "alpaca_gpt4_en"
+template: "llama2"
+finetuning_type: "lora"
+
+# Training parameters
+output_dir: "./output_with_callbacks"
+num_train_epochs: 3
+per_device_train_batch_size: 4
+per_device_eval_batch_size: 4
+learning_rate: 5e-5
+lr_scheduler_type: "cosine"
+warmup_steps: 100
+
+# Evaluation settings
+evaluation_strategy: "steps"
+eval_steps: 500
+save_steps: 1000
+logging_steps: 10
+
+# LoRA settings
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.1
+lora_target: "all"
+
+# ============================================================================
+# CUSTOM CALLBACKS CONFIGURATION - THIS IS THE NEW FEATURE!
+# ============================================================================
+
+# The callback system will load these automatically during training
+custom_callbacks:
+  
+  # Example 1: Company metrics upload callback
+  - name: "examples.custom_callbacks.CompanyUploadMonitorCallback"
+    args:
+      upload_url: "https://company-monitor.internal/api/metrics"
+      api_key: "${COMPANY_API_KEY}"  # Environment variable
+      project_name: "llama-fine-tuning-experiment"
+      upload_interval: 50  # Upload every 50 steps
+
+  # Example 2: Enhanced logging callback  
+  - name: "examples.custom_callbacks.Company2ExtraLogCallback"
+    args:
+      log_level: "info"
+      log_file: "./training_detailed.log"
+      include_gradients: false
+      include_memory_usage: true
+
+  # Example 3: Smart model checkpointing
+  - name: "examples.callback_format_rules.SmartEarlyStoppingCallback"
+    args:
+      loss_threshold: 3.0
+      patience: 5
+
+# Optional: Use only custom callbacks (disable built-in ones)
+# custom_callbacks_only: false  # Default: false (keep built-in callbacks)
+
+# ============================================================================
+# HOW TO USE THIS YAML FILE
+# ============================================================================
+
+# Method 1: Command line training
+# llamafactory-cli train training_with_callbacks.yaml
+
+# Method 2: Python API
+# from llamafactory.train.tuner import run_exp
+# run_exp()
+
+# Method 3: Web UI
+# Use this YAML in the LLaMA-Factory web interface
+
+# ============================================================================
+# WHAT HAPPENS DURING TRAINING
+# ============================================================================
+
+# 1. LLaMA-Factory reads this YAML file
+# 2. Parses the 'custom_callbacks' section
+# 3. For each callback:
+#    a. Imports the module (e.g., examples.custom_callbacks)
+#    b. Creates instance with args as constructor parameters
+#    c. Validates it inherits from TrainerCallback
+#    d. Adds to the trainer's callback list
+# 4. During training, HuggingFace calls ALL callbacks for each lifecycle event
+# 5. Your custom callbacks receive the calls and execute their logic
+
+# ============================================================================
+# EXPECTED TRAINING OUTPUT
+# ============================================================================
+
+# You'll see output like this during training:
+# [INFO] Loading custom callbacks...
+# [INFO] Loaded callback: examples.custom_callbacks.CompanyUploadMonitorCallback
+# [INFO] Loaded callback: examples.custom_callbacks.Company2ExtraLogCallback  
+# [INFO] Loaded callback: examples.callback_format_rules.SmartEarlyStoppingCallback
+# [INFO] Loaded 3 custom callbacks from configuration
+# 
+# During training:
+# 📊 [COMPANY] Uploading metrics to company platform (step 50)
+# 📝 [COMPANY2] Enhanced logging at step 100
+# ⚠️  Smart stopping: Loss 2.8 approaching threshold 3.0
+# 🛑 Smart stopping: Training stopped due to high loss!
+
+# ============================================================================
+# ADVANCED CONFIGURATION OPTIONS
+# ============================================================================
+
+# Environment variables in callback args (secure API keys)
+# custom_callbacks:
+#   - name: "company.SecureCallback"  
+#     args:
+#       api_key: "${SECRET_API_KEY}"      # From environment
+#       webhook: "${SLACK_WEBHOOK_URL}"   # From environment
+#       debug: "${DEBUG_MODE:-false}"     # With default value
+
+# Conditional callbacks (enable based on environment)
+# custom_callbacks:
+#   - name: "debug.DetailedLoggingCallback"
+#     args:
+#       enabled: "${DEBUG_MODE:-false}"
+
+# Complex callback configurations
+# custom_callbacks:
+#   - name: "advanced.MultiStageCallback"
+#     args:
+#       stages:
+#         - stage: "warmup"
+#           metric_threshold: 1.0
+#           actions: ["log", "alert"]
+#         - stage: "training"  
+#           metric_threshold: 0.5
+#           actions: ["log", "save", "upload"]
+#       notification_channels:
+#         - type: "slack"
+#           webhook: "${SLACK_WEBHOOK}"
+#         - type: "email"
+#           recipients: ["team@company.com"]

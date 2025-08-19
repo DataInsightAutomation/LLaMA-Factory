@@ -1,0 +1,119 @@
+# Example YAML configuration showing how to use custom callbacks
+# This demonstrates the exact format and rules for callback integration
+
+# Basic training configuration
+model_name_or_path: "meta-llama/Llama-2-7b-hf"
+dataset: "alpaca_gpt4_en"
+template: "llama2"
+finetuning_type: "lora"
+output_dir: "./output"
+num_train_epochs: 3
+per_device_train_batch_size: 4
+learning_rate: 5e-5
+
+# ====================================================================
+# CUSTOM CALLBACKS CONFIGURATION
+# ====================================================================
+
+# This is where the magic happens - callbacks are loaded from YAML!
+custom_callbacks:
+  
+  # Example 1: Company metrics upload callback
+  - name: "my_company.callbacks.MetricsUploadCallback"
+    args:
+      # Parameters are automatically injected into constructor
+      upload_endpoint: "https://monitoring.company.com/api/metrics"
+      api_key: "${COMPANY_API_KEY}"  # Environment variable substitution
+      project_name: "llama-finetuning-project"
+      upload_interval: 50  # Upload every 50 steps
+      include_model_stats: true
+
+  # Example 2: Smart early stopping with custom logic  
+  - name: "my_company.callbacks.SmartEarlyStoppingCallback"
+    args:
+      patience: 5
+      min_improvement: 0.001
+      monitor_metric: "eval_loss"
+      save_best_model: true
+
+  # Example 3: Custom evaluation callback
+  - name: "custom_eval.AdvancedEvaluationCallback" 
+    args:
+      eval_steps: 200
+      custom_metrics: ["bleu", "rouge", "perplexity"]
+      save_predictions: true
+      prediction_file: "./predictions.json"
+
+  # Example 4: Model inspection and debugging
+  - name: "debug.ModelInspectionCallback"
+    args:
+      inspect_every: 500
+      log_gradients: true
+      log_activations: false
+      memory_tracking: true
+
+  # Example 5: Slack notifications (hypothetical)
+  - name: "notifications.SlackCallback"
+    args:
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      notify_on_start: true
+      notify_on_complete: true  
+      notify_on_error: true
+      channel: "#ml-training"
+
+# ====================================================================
+# HOW THE CALLBACK LOADING WORKS
+# ====================================================================
+
+# When you run: llamafactory-cli train this_config.yaml
+#
+# 1. LLaMA-Factory reads the 'custom_callbacks' section
+# 2. For each callback configuration:
+#    a. Imports the module using the 'name' (full import path)
+#    b. Creates instance by calling constructor with 'args' as kwargs
+#    c. Validates that class inherits from TrainerCallback
+#    d. Adds to the callback list for the trainer
+# 3. During training, HuggingFace Transformers calls lifecycle methods
+# 4. Your custom callbacks receive the calls and can:
+#    - Monitor training progress
+#    - Upload metrics to external systems
+#    - Control training flow (stop, save, evaluate)
+#    - Access model, optimizer, and other training context
+
+# ====================================================================
+# CALLBACK FORMAT REQUIREMENTS SUMMARY
+# ====================================================================
+
+# ✅ REQUIRED FORMAT:
+# 1. Full import path in 'name' field
+# 2. Constructor parameters in 'args' section  
+# 3. Class must inherit from transformers.TrainerCallback
+# 4. Override lifecycle methods (on_log, on_step_end, etc.)
+
+# ✅ PARAMETER INJECTION:
+# - All 'args' are passed as kwargs to constructor
+# - Environment variables: ${VAR_NAME} 
+# - Type conversion: strings, numbers, booleans, lists, dicts
+
+# ✅ LIFECYCLE METHODS AVAILABLE:
+# - on_train_begin/end: Start/end of training
+# - on_epoch_begin/end: Start/end of each epoch
+# - on_step_begin/end: Start/end of each step
+# - on_evaluate: After evaluation
+# - on_log: When metrics are logged
+# - on_save: When model is saved
+
+# ✅ WHAT CALLBACKS CAN ACCESS:
+# - args: TrainingArguments (learning_rate, batch_size, etc.)
+# - state: TrainerState (global_step, epoch, etc.)  
+# - control: TrainerControl (should_stop, should_save, etc.)
+# - logs: Dict of metrics (loss, accuracy, etc.)
+# - kwargs: model, tokenizer, optimizer, dataloaders, etc.
+
+# ✅ WHAT CALLBACKS CAN CONTROL:
+# - Stop training: control.should_training_stop = True
+# - Force evaluation: control.should_evaluate = True  
+# - Force saving: control.should_save = True
+# - Force logging: control.should_log = True
+
+# 🎯 RESULT: Complete extensibility without modifying core code!

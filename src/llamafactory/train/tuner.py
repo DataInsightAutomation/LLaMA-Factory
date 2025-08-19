@@ -28,6 +28,7 @@ from ..extras.packages import is_ray_available
 from ..hparams import get_infer_args, get_ray_args, get_train_args, read_args
 from ..model import load_model, load_tokenizer
 from .callbacks import LogCallback, PissaConvertCallback, ReporterCallback
+from .callback_registry import load_callbacks_from_config
 from .dpo import run_dpo
 from .kto import run_kto
 from .ppo import run_ppo
@@ -51,20 +52,40 @@ logger = logging.get_logger(__name__)
 
 def _training_function(config: dict[str, Any]) -> None:
     args = config.get("args")
-    callbacks: list[Any] = config.get("callbacks")
+    callbacks: list[Any] = config.get("callbacks", [])
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
 
-    callbacks.append(LogCallback())
-    if finetuning_args.pissa_convert:
-        callbacks.append(PissaConvertCallback())
+    # Load callbacks from YAML configuration if specified
+    if hasattr(training_args, 'custom_callbacks') and training_args.custom_callbacks:
+        try:
+            custom_callbacks = load_callbacks_from_config(
+                callback_configs=training_args.custom_callbacks,
+                model_args=model_args,
+                data_args=data_args,
+                training_args=training_args,
+                finetuning_args=finetuning_args,
+                generating_args=generating_args,
+            )
+            callbacks.extend(custom_callbacks)
+            logger.info(f"Loaded {len(custom_callbacks)} custom callbacks from configuration")
+        except Exception as e:
+            logger.error(f"Failed to load custom callbacks: {e}")
+            # Continue with built-in callbacks only
+    
+    # Add built-in callbacks (can be overridden by custom_callbacks_only flag)
+    if not getattr(training_args, 'custom_callbacks_only', False):
+        callbacks.append(LogCallback())
+        
+        if finetuning_args.pissa_convert:
+            callbacks.append(PissaConvertCallback())
 
-    if finetuning_args.use_swanlab:
-        callbacks.append(get_swanlab_callback(finetuning_args))
+        if finetuning_args.use_swanlab:
+            callbacks.append(get_swanlab_callback(finetuning_args))
 
-    if finetuning_args.early_stopping_steps is not None:
-        callbacks.append(EarlyStoppingCallback(early_stopping_patience=finetuning_args.early_stopping_steps))
+        if finetuning_args.early_stopping_steps is not None:
+            callbacks.append(EarlyStoppingCallback(early_stopping_patience=finetuning_args.early_stopping_steps))
 
-    callbacks.append(ReporterCallback(model_args, data_args, finetuning_args, generating_args))  # add to last
+        callbacks.append(ReporterCallback(model_args, data_args, finetuning_args, generating_args))  # add to last
 
     if finetuning_args.stage == "pt":
         run_pt(model_args, data_args, training_args, finetuning_args, callbacks)

@@ -1,0 +1,77 @@
+### model
+model_name_or_path: meta-llama/Llama-3.2-1B-Instruct
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_rank: 8
+lora_target: all
+
+### dataset
+dataset: identity
+template: llama3
+cutoff_len: 2048
+max_samples: 1000
+overwrite_cache: true
+preprocessing_num_workers: 1
+dataloader_num_workers: 1
+
+### output
+output_dir: saves/llama3-8b/lora/sft
+logging_steps: 10
+save_steps: 500
+plot_loss: true
+overwrite_output_dir: true
+save_only_model: false
+report_to: none  # choices: [none, wandb, tensorboard, swanlab, mlflow]
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 2
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+ddp_timeout: 180000000
+resume_from_checkpoint: null
+
+### eval
+# eval_dataset: alpaca_en_demo
+# val_size: 0.1
+# per_device_eval_batch_size: 1
+# eval_strategy: steps
+# eval_steps: 500
+
+### custom callbacks - NEW FEATURE!
+custom_callbacks:
+  # Example 1: Company monitoring callback for real metrics tracking
+  - name: "examples.working_custom_callbacks.CompanyUploadMonitorCallback"
+    args:
+      upload_url: "https://company-monitor.internal/api/metrics"
+      api_key: "${COMPANY_API_KEY:-demo_key}"  # Environment variable with fallback
+      project_name: "llama3-lora-sft-experiment"
+      upload_interval: 20  # Upload metrics every 20 steps (more frequent for demo)
+
+  # Example 2: Smart early stopping based on evaluation loss
+  - name: "examples.working_custom_callbacks.SmartEarlyStoppingCallback"
+    args:
+      loss_threshold: 3.0  # Stop if eval loss goes above 3.0
+      patience: 2          # Wait 2 evaluations before stopping
+
+  # Example 3: Model analysis for debugging and monitoring  
+  - name: "examples.working_custom_callbacks.ModelAnalysisCallback"
+    args:
+      analysis_steps: 50   # Analyze model every 50 steps
+
+  # Example 4: Environment-aware callback (demonstrates env variables)
+  - name: "examples.working_custom_callbacks.EnvironmentAwareCallback"
+    args:
+      debug_mode: "${DEBUG_MODE:-false}"           # Set DEBUG_MODE=true for detailed logs
+      log_file: "./llama3_training_detailed.log"
+      company_name: "${COMPANY_NAME:-MyCompany}"   # Set your company name
+
+# Optional: Only use custom callbacks (disable built-in logging)
+# custom_callbacks_only: false

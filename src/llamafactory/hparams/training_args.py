@@ -14,7 +14,7 @@
 
 import json
 from dataclasses import dataclass, field
-from typing import Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Union
 
 from transformers import Seq2SeqTrainingArguments
 from transformers.training_args import _convert_str_dict
@@ -76,6 +76,15 @@ class RayArguments:
 @dataclass
 class TrainingArguments(RayArguments, Seq2SeqTrainingArguments):
     r"""Arguments pertaining to the trainer."""
+
+    custom_callbacks: Optional[List[dict[str, Any]]] = field(
+        default=None,
+        metadata={"help": "List of custom callback configurations to load during training."},
+    )
+    custom_callbacks_only: bool = field(
+        default=False,
+        metadata={"help": "If True, only use custom callbacks (disable built-in logging callbacks)."},
+    )
 
     def __post_init__(self):
         Seq2SeqTrainingArguments.__post_init__(self)
