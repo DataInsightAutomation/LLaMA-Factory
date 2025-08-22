@@ -62,7 +62,7 @@ def _training_function(config: dict[str, Any]) -> None:
                 callback_configs=training_args.custom_callbacks,
                 model_args=model_args,
                 data_args=data_args,
-                training_args=training_args,
+                # training_args=training_args,
                 finetuning_args=finetuning_args,
                 generating_args=generating_args,
             )
@@ -71,7 +71,9 @@ def _training_function(config: dict[str, Any]) -> None:
         except Exception as e:
             logger.error(f"Failed to load custom callbacks: {e}")
             # Continue with built-in callbacks only
-    
+    # raise ValueError(
+    #     "Please specify `custom_callbacks` in training arguments to use custom callbacks."
+    # ) 
     # Add built-in callbacks (can be overridden by custom_callbacks_only flag)
     if not getattr(training_args, 'custom_callbacks_only', False):
         callbacks.append(LogCallback())
