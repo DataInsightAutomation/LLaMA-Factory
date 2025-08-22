@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from transformers import TrainingArguments
 
 
-class CompanyUploadMonitorCallback(TrainerCallback):
+class DemoUploadMonitorCallBack(TrainerCallback):
     """Real working callback that monitors training and uploads metrics."""
 
     """This demonstrates a practical use case for custom callbacks."""
@@ -34,7 +34,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         self.step_count = 0
         self.start_time = None
 
-        print("🔧 CompanyUploadMonitorCallback initialized:")
+        print("🔧 DemoUploadMonitorCallBack initialized:")
         print(f"   Project: {self.project_name}")
         print(f"   Upload URL: {self.upload_url}")
         print(f"   Upload interval: {self.upload_interval} steps")
@@ -51,7 +51,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         print(f"🚀 [COMPANY] Training started for project: {self.project_name}")
         print(f"   Model: {getattr(args, 'output_dir', 'Unknown')}")
         print(f"   Total epochs: {args.num_train_epochs}")
-        print("[DEBUG] on_train_begin called in CompanyUploadMonitorCallback")
+        print("[DEBUG] on_train_begin called in DemoUploadMonitorCallBack")
 
     def on_log(
         self,
@@ -62,7 +62,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         **kwargs,
     ):
         """Called when metrics are logged."""
-        print(f"[DEBUG] on_log called in CompanyUploadMonitorCallback, logs={logs}")
+        print(f"[DEBUG] on_log called in DemoUploadMonitorCallBack, logs={logs}")
         if logs is None:
             return
 
@@ -286,7 +286,7 @@ if __name__ == "__main__":
     print("These callbacks can be used in YAML configuration files:")
     print()
     print("custom_callbacks:")
-    print("  - name: 'examples.custom_callbacks.CompanyUploadMonitorCallback'")
+    print("  - name: 'examples.custom_callbacks.DemoUploadMonitorCallBack'")
     print("    args:")
     print("      project_name: 'my-experiment'")
     print("      upload_interval: 50")

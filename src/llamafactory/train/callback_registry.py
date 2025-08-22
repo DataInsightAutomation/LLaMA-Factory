@@ -22,6 +22,7 @@ from transformers import EarlyStoppingCallback, TrainerCallback
 from ..extras import logging
 from ..hparams import get_train_args
 from .callbacks import LogCallback, PissaConvertCallback, ReporterCallback
+from .trainer_utils import get_swanlab_callback
 
 
 if TYPE_CHECKING:
@@ -272,14 +273,11 @@ def get_default_callbacks(
     """Return a list of default (built-in) callbacks based on arguments."""
     ensure_builtin_callbacks_registered()
     callbacks = []
-    from .callbacks import LogCallback, PissaConvertCallback, ReporterCallback
 
     callbacks.append(LogCallback())
     if finetuning_args is not None and getattr(finetuning_args, "pissa_convert", False):
         callbacks.append(PissaConvertCallback())
     if finetuning_args is not None and getattr(finetuning_args, "use_swanlab", False):
-        from .trainer_utils import get_swanlab_callback
-
         callbacks.append(get_swanlab_callback(finetuning_args))
     if finetuning_args is not None and getattr(finetuning_args, "early_stopping_steps", None) is not None:
         callbacks.append(EarlyStoppingCallback(early_stopping_patience=finetuning_args.early_stopping_steps))

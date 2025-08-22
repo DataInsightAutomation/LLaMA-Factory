@@ -49,8 +49,8 @@ resume_from_checkpoint: null
 # custom_callbacks:
 callbacks:
   # Example 1: Company monitoring callback for real metrics tracking
-  # - name: "examples.working_custom_callbacks.CompanyUploadMonitorCallback"
-  - name: "/home/ubuntu/lun/llamafactory/LLaMA-Factory/examples/callback/working_custom_callbacks.py:CompanyUploadMonitorCallback"
+  # - name: "examples.working_custom_callbacks.DemoUploadMonitorCallBack"
+  - name: "/home/ubuntu/lun/llamafactory/LLaMA-Factory/examples/callback/working_custom_callbacks.py:DemoUploadMonitorCallBack"
     args:
       upload_url: "https://company-monitor.internal/api/metrics"
       api_key: "${COMPANY_API_KEY:-demo_key}"  # Environment variable with fallback
