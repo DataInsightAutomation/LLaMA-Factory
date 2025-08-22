@@ -67,7 +67,7 @@ custom_callbacks:
 ```python
 # File: my_company/callbacks.py
 from transformers import TrainerCallback, TrainerControl, TrainerState
-from typing import TYPE_CHECKING, Optional, Dict, Any
+from typing import TYPE_CHECKING, Optional, Any
 
 if TYPE_CHECKING:
     from transformers import TrainingArguments

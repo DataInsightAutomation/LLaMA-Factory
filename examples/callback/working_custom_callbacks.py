@@ -4,7 +4,7 @@ These can be used directly with YAML configuration files.
 """
 
 import time
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Optional
 
 from transformers import TrainerCallback, TrainerControl, TrainerState
 
@@ -56,7 +56,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         args: "TrainingArguments",
         state: TrainerState,
         control: TrainerControl,
-        logs: Optional[Dict[str, float]] = None,
+        logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
         """Called when metrics are logged"""
@@ -94,7 +94,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         args: "TrainingArguments",
         state: TrainerState,
         control: TrainerControl,
-        logs: Optional[Dict[str, float]] = None,
+        logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
         """Called after evaluation"""
@@ -140,7 +140,7 @@ class SmartEarlyStoppingCallback(TrainerCallback):
         args: "TrainingArguments",
         state: TrainerState,
         control: TrainerControl,
-        logs: Optional[Dict[str, float]] = None,
+        logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
         """Check for early stopping conditions"""
@@ -261,7 +261,7 @@ class EnvironmentAwareCallback(TrainerCallback):
         args: "TrainingArguments",
         state: TrainerState,
         control: TrainerControl,
-        logs: Optional[Dict[str, float]] = None,
+        logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
         """Log with environment-based configuration"""

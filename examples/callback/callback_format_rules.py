@@ -3,7 +3,7 @@
 
 import json
 import time
-from typing import Dict, Optional
+from typing import Optional
 
 from transformers import TrainerCallback
 
@@ -51,7 +51,7 @@ class MyCompanyMetricsCallback(TrainerCallback):
         args,  # TrainingArguments
         state,  # TrainerState
         control,  # TrainerControl
-        logs: Optional[Dict[str, float]] = None,
+        logs: Optional[dict[str, float]] = None,
         **kwargs,  # Additional context (model, tokenizer, etc.)
     ):
         """RULE 3: Override specific lifecycle methods

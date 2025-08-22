@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from transformers import EarlyStoppingCallback, TrainerCallback
 
 from ..extras import logging
+from .callbacks import LogCallback, PissaConvertCallback, ReporterCallback
+from ..hparams import get_train_args
 
 
 if TYPE_CHECKING:
@@ -77,7 +79,6 @@ class CallbackRegistry:
         # resolve any names. This avoids import-time side-effects while
         # still making built-ins available when the registry is used.
         ensure_builtin_callbacks_registered()
-
         if name in cls._registry:
             return cls._registry[name]
 
@@ -191,27 +192,10 @@ def callback_plugin(name: str):
 # Register built-in callbacks
 def register_builtin_callbacks():
     """Register all built-in LLaMA-Factory callbacks."""
-    from .callbacks import LogCallback, PissaConvertCallback, ReporterCallback
-
     CallbackRegistry.register_builtin("log", LogCallback)
     CallbackRegistry.register_builtin("pissa_convert", PissaConvertCallback)
     CallbackRegistry.register_builtin("reporter", ReporterCallback)
     CallbackRegistry.register_builtin("early_stopping", EarlyStoppingCallback)
-    try:
-        from .workflow_callbacks import (
-            EvaluationCallback,
-            MetricsCallback,
-            PredictionCallback,
-            TrainingStageCallback,
-        )
-
-        CallbackRegistry.register_builtin("evaluation", EvaluationCallback)
-        CallbackRegistry.register_builtin("prediction", PredictionCallback)
-        CallbackRegistry.register_builtin("training_stage", TrainingStageCallback)
-        CallbackRegistry.register_builtin("metrics", MetricsCallback)
-    except ImportError:
-        logger.warning("Workflow callbacks not available")
-
 
 def load_callbacks_from_config(
     callback_configs: list[Union[str, dict[str, Any]]],
@@ -308,19 +292,18 @@ def get_all_callbacks(args=None):
     Accepts a single args (dict or Namespace) and always derives detailed arguments from it.
     If training_args.custom_callbacks_only is True, only custom callbacks are returned.
     """
-    from ..hparams import get_train_args
 
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
     custom_callbacks = []
-    if hasattr(training_args, "callbacks") and training_args.callbacks:
+    if hasattr(finetuning_args, "callbacks") and finetuning_args.callbacks:
         custom_callbacks = load_callbacks_from_config(
-            callback_configs=training_args.callbacks,
+            callback_configs=finetuning_args.callbacks,
             model_args=model_args,
             data_args=data_args,
             finetuning_args=finetuning_args,
             generating_args=generating_args,
         )
-    if getattr(training_args, "custom_callbacks_only", False):
+    if getattr(finetuning_args, "custom_callbacks_only", False):
         return custom_callbacks
     return custom_callbacks + get_default_callbacks(
         model_args=model_args,

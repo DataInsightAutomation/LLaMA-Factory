@@ -3,7 +3,7 @@
 
 import json
 import time
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Optional
 
 import requests
 from transformers import TrainerCallback, TrainerControl, TrainerState
@@ -39,7 +39,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         args: "TrainingArguments",
         state: TrainerState,
         control: TrainerControl,
-        logs: Optional[Dict[str, float]] = None,
+        logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
         """Upload metrics to company platform."""
@@ -217,7 +217,7 @@ class SlackNotificationCallback(TrainerCallback):
         args: "TrainingArguments",
         state: TrainerState,
         control: TrainerControl,
-        logs: Optional[Dict[str, float]] = None,
+        logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
         """Send periodic updates."""

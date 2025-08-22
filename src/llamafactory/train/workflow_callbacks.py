@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import math
-from typing import TYPE_CHECKING, Any, Optional, dict
+from typing import TYPE_CHECKING, Any, Optional
 
 from transformers import TrainerCallback, TrainerControl, TrainerState
 
