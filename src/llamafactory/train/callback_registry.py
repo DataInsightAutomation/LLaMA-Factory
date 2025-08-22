@@ -51,23 +51,34 @@ class CallbackRegistry:
     
     @classmethod
     def get_callback(cls, name: str) -> Type[TrainerCallback]:
-        """Get a callback class by name."""
+        """Get a callback class by name or file path."""
         if name in cls._registry:
             return cls._registry[name]
-        
-        # Try to dynamically import from module path
+
+        # Support loading from file path: /path/to/file.py:ClassName
+        import os, importlib.util
+        if (name.endswith('.py') or '.py:' in name or os.path.sep in name) and ':' in name:
+            file_path, class_name = name.rsplit(':', 1)
+            if not os.path.isfile(file_path):
+                raise ValueError(f"Callback file does not exist: {file_path}")
+            spec = importlib.util.spec_from_file_location("user_callback_module", file_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            callback_class = getattr(module, class_name)
+            if not issubclass(callback_class, TrainerCallback):
+                raise ValueError(f"Class {class_name} is not a TrainerCallback")
+            cls.register(name, callback_class)
+            return callback_class
+
+        # Otherwise, try to import by module path
         try:
             module_path, class_name = name.rsplit('.', 1)
             module = importlib.import_module(module_path)
             callback_class = getattr(module, class_name)
-            
             if not issubclass(callback_class, TrainerCallback):
                 raise ValueError(f"Class {class_name} is not a TrainerCallback")
-            
-            # Auto-register for future use
             cls.register(name, callback_class)
             return callback_class
-            
         except (ImportError, AttributeError, ValueError) as e:
             raise ValueError(f"Cannot load callback '{name}': {e}")
     
@@ -81,12 +92,19 @@ class CallbackRegistry:
         finetuning_args: Optional["FinetuningArguments"] = None,
         generating_args: Optional["GeneratingArguments"] = None,
     ) -> TrainerCallback:
+        import sys
+        import os
+        sys.path.insert(0, os.path.abspath('.'))
         """Create a callback instance with the given arguments."""
+        print(name,'get_callback name')
+
         callback_class = cls.get_callback(name)
+        print(callback_class,'callback_class')
         args = args or {}
         
         # Get constructor signature to inject appropriate arguments
         sig = inspect.signature(callback_class.__init__)
+        print(sig,'sig')
         constructor_args = {}
         
         # Map common argument names
@@ -96,7 +114,7 @@ class CallbackRegistry:
             'finetuning_args': finetuning_args,
             'generating_args': generating_args,
         }
-        
+        print(sig.parameters,'sig.parameters')
         # Add arguments that the constructor accepts
         for param_name in sig.parameters:
             if param_name == 'self':

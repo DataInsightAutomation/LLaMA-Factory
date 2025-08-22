@@ -50,6 +50,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         print(f"🚀 [COMPANY] Training started for project: {self.project_name}")
         print(f"   Model: {getattr(args, 'output_dir', 'Unknown')}")
         print(f"   Total epochs: {args.num_train_epochs}")
+        print(f"[DEBUG] on_train_begin called in CompanyUploadMonitorCallback")
     
     def on_log(
         self,
@@ -60,6 +61,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         **kwargs,
     ):
         """Called when metrics are logged"""
+        print(f"[DEBUG] on_log called in CompanyUploadMonitorCallback, logs={logs}")
         if logs is None:
             return
         
