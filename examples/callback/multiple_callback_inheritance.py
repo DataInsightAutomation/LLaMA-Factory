@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Demonstrating what happens with multiple callbacks extending the same parent
+
+"""Demonstrating what happens with multiple callbacks extending the same parent.
+
 and callback chaining scenarios in HuggingFace training.
 """
 
@@ -12,7 +14,7 @@ from transformers import EarlyStoppingCallback, TrainerCallback, TrainerControl,
 
 
 class CompanyEarlyStoppingA(EarlyStoppingCallback):
-    """Company A's custom early stopping with super()"""
+    """Company A's custom early stopping with super()."""
 
     def __init__(self, early_stopping_patience: int, company_name: str = "CompanyA"):
         super().__init__(early_stopping_patience=early_stopping_patience)
@@ -20,7 +22,7 @@ class CompanyEarlyStoppingA(EarlyStoppingCallback):
         self.evaluation_count = 0
 
     def on_evaluate(self, args, state, control, logs=None, **kwargs):
-        """Extend parent early stopping"""
+        """Extend parent early stopping."""
         self.evaluation_count += 1
 
         # Custom logic BEFORE parent
@@ -39,7 +41,7 @@ class CompanyEarlyStoppingA(EarlyStoppingCallback):
 
 
 class CompanyEarlyStoppingB(EarlyStoppingCallback):
-    """Company B's custom early stopping with super()"""
+    """Company B's custom early stopping with super()."""
 
     def __init__(self, early_stopping_patience: int, company_name: str = "CompanyB"):
         super().__init__(early_stopping_patience=early_stopping_patience)
@@ -47,7 +49,7 @@ class CompanyEarlyStoppingB(EarlyStoppingCallback):
         self.stop_notifications = []
 
     def on_evaluate(self, args, state, control, logs=None, **kwargs):
-        """Extend parent early stopping"""
+        """Extend parent early stopping."""
         # Custom logic BEFORE parent
         print(f"🔍 [{self.company_name}] Checking metrics before parent...")
 
@@ -68,7 +70,7 @@ class CompanyEarlyStoppingB(EarlyStoppingCallback):
 
 
 class BaseCompanyCallback(TrainerCallback):
-    """Base callback with common company functionality"""
+    """Base callback with common company functionality."""
 
     def __init__(self, company_name: str, webhook_url: str = None):
         super().__init__()
@@ -77,24 +79,24 @@ class BaseCompanyCallback(TrainerCallback):
         self.events = []
 
     def log_event(self, event: str):
-        """Common logging functionality"""
+        """Common logging functionality."""
         self.events.append(event)
         print(f"📋 [{self.company_name}] Event: {event}")
 
     def on_train_begin(self, args, state, control, **kwargs):
-        """Base train begin behavior"""
+        """Base train begin behavior."""
         self.log_event("Training started")
 
 
 class EnhancedCompanyCallback(BaseCompanyCallback):
-    """Extends BaseCompanyCallback with additional features"""
+    """Extends BaseCompanyCallback with additional features."""
 
     def __init__(self, company_name: str, webhook_url: str = None, alert_threshold: float = 2.0):
         super().__init__(company_name, webhook_url)
         self.alert_threshold = alert_threshold
 
     def on_train_begin(self, args, state, control, **kwargs):
-        """Extend parent train begin"""
+        """Extend parent train begin."""
         # Call parent behavior first
         super().on_train_begin(args, state, control, **kwargs)
 
@@ -102,7 +104,7 @@ class EnhancedCompanyCallback(BaseCompanyCallback):
         self.log_event(f"Enhanced monitoring started (threshold: {self.alert_threshold})")
 
     def on_log(self, args, state, control, logs=None, **kwargs):
-        """New functionality - parent doesn't have on_log"""
+        """New functionality - parent doesn't have on_log."""
         if logs:
             loss = logs.get("train_loss", 0)
             if loss > self.alert_threshold:
@@ -110,7 +112,7 @@ class EnhancedCompanyCallback(BaseCompanyCallback):
 
 
 class UltraEnhancedCallback(EnhancedCompanyCallback):
-    """Triple-level inheritance chain"""
+    """Triple-level inheritance chain."""
 
     def __init__(
         self, company_name: str, webhook_url: str = None, alert_threshold: float = 2.0, save_frequency: int = 100
@@ -120,7 +122,7 @@ class UltraEnhancedCallback(EnhancedCompanyCallback):
         self.step_count = 0
 
     def on_train_begin(self, args, state, control, **kwargs):
-        """Extend parent's extended train begin"""
+        """Extend parent's extended train begin."""
         # Call the chain: UltraEnhanced -> Enhanced -> Base
         super().on_train_begin(args, state, control, **kwargs)
 
@@ -128,7 +130,7 @@ class UltraEnhancedCallback(EnhancedCompanyCallback):
         self.log_event(f"Ultra-enhanced monitoring with save frequency: {self.save_frequency}")
 
     def on_step_end(self, args, state, control, **kwargs):
-        """New functionality - force saving at intervals"""
+        """New functionality - force saving at intervals."""
         self.step_count += 1
 
         if self.step_count % self.save_frequency == 0:
@@ -144,21 +146,21 @@ class UltraEnhancedCallback(EnhancedCompanyCallback):
 
 
 class MetricsUploadMixin:
-    """Mixin for uploading metrics"""
+    """Mixin for uploading metrics."""
 
     def upload_metrics(self, metrics: dict, step: int):
         print(f"📤 Uploading metrics at step {step}: {metrics}")
 
 
 class AlertingMixin:
-    """Mixin for sending alerts"""
+    """Mixin for sending alerts."""
 
     def send_alert(self, message: str):
         print(f"🚨 ALERT: {message}")
 
 
 class SuperCallback(TrainerCallback, MetricsUploadMixin, AlertingMixin):
-    """Multiple inheritance callback"""
+    """Multiple inheritance callback."""
 
     def __init__(self, upload_frequency: int = 50):
         super().__init__()  # Only calls TrainerCallback.__init__
@@ -166,7 +168,7 @@ class SuperCallback(TrainerCallback, MetricsUploadMixin, AlertingMixin):
         self.step_count = 0
 
     def on_log(self, args, state, control, logs=None, **kwargs):
-        """Uses functionality from multiple parents"""
+        """Uses functionality from multiple parents."""
         if logs:
             self.step_count += 1
 
@@ -186,7 +188,7 @@ class SuperCallback(TrainerCallback, MetricsUploadMixin, AlertingMixin):
 
 
 def demo_multiple_same_parent():
-    """Show what happens with multiple callbacks extending same parent"""
+    """Show what happens with multiple callbacks extending same parent."""
     print("=" * 60)
     print("🔍 SCENARIO 1: Multiple callbacks extending EarlyStoppingCallback")
     print("=" * 60)
@@ -226,7 +228,7 @@ def demo_multiple_same_parent():
 
 
 def demo_chained_inheritance():
-    """Show inheritance chain behavior"""
+    """Show inheritance chain behavior."""
     print("=" * 60)
     print("🔗 SCENARIO 2: Chained inheritance (A -> B -> C)")
     print("=" * 60)
@@ -263,7 +265,7 @@ def demo_chained_inheritance():
 
 
 def demo_multiple_inheritance():
-    """Show multiple inheritance with mixins"""
+    """Show multiple inheritance with mixins."""
     print("=" * 60)
     print("🔀 SCENARIO 3: Multiple inheritance with mixins")
     print("=" * 60)
@@ -291,7 +293,7 @@ def demo_multiple_inheritance():
 
 
 def main():
-    """Demonstrate all scenarios"""
+    """Demonstrate all scenarios."""
     print("🧪 MULTIPLE CALLBACK INHERITANCE SCENARIOS")
     print("=" * 60)
 

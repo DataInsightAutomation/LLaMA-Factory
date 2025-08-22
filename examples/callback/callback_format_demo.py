@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Example demonstrating how custom callbacks work with specific format/rules.
+
 This shows the complete flow from YAML config to callback execution.
 """
 
@@ -19,16 +20,16 @@ from llamafactory.train.callback_registry import load_callbacks_from_config
 
 # Example 1: Simple callback with basic format requirements
 class SimpleLoggingCallback(TrainerCallback):
-    """RULE 1: Must inherit from TrainerCallback"""
+    """RULE 1: Must inherit from TrainerCallback."""
 
     def __init__(self, log_prefix: str = "SIMPLE", log_interval: int = 10):
-        """RULE 2: Constructor receives parameters from YAML 'args' section"""
+        """RULE 2: Constructor receives parameters from YAML 'args' section."""
         self.log_prefix = log_prefix
         self.log_interval = log_interval
         self.step_count = 0
 
     def on_log(self, args, state, control, logs=None, **kwargs):
-        """RULE 3: Override specific lifecycle methods to hook into training"""
+        """RULE 3: Override specific lifecycle methods to hook into training."""
         if logs is None:
             return
 
@@ -39,7 +40,7 @@ class SimpleLoggingCallback(TrainerCallback):
 
 # Example 2: Advanced callback that controls training flow
 class SmartStoppingCallback(TrainerCallback):
-    """Shows how callbacks can control training behavior"""
+    """Shows how callbacks can control training behavior."""
 
     def __init__(self, max_loss: float = 10.0, patience: int = 5):
         self.max_loss = max_loss
@@ -47,7 +48,7 @@ class SmartStoppingCallback(TrainerCallback):
         self.high_loss_count = 0
 
     def on_log(self, args, state, control, logs=None, **kwargs):
-        """RULE 4: Can modify TrainerControl to influence training"""
+        """RULE 4: Can modify TrainerControl to influence training."""
         if logs is None:
             return control
 
@@ -68,13 +69,13 @@ class SmartStoppingCallback(TrainerCallback):
 
 # Example 3: Callback that accesses model and training context
 class ModelAnalysisCallback(TrainerCallback):
-    """Shows how to access model and other training components"""
+    """Shows how to access model and other training components."""
 
     def __init__(self, analysis_steps: int = 100):
         self.analysis_steps = analysis_steps
 
     def on_step_end(self, args, state, control, **kwargs):
-        """RULE 5: Access model and other components via kwargs"""
+        """RULE 5: Access model and other components via kwargs."""
         if state.global_step % self.analysis_steps == 0:
             model = kwargs.get("model")
             if model is not None:
@@ -89,7 +90,7 @@ class ModelAnalysisCallback(TrainerCallback):
 
 
 def demo_callback_loading():
-    """Demonstrate how callbacks are loaded from YAML configuration"""
+    """Demonstrate how callbacks are loaded from YAML configuration."""
     # Create YAML configuration
     yaml_config = {
         "custom_callbacks": [
@@ -128,7 +129,7 @@ def demo_callback_loading():
 
 
 def simulate_training_with_callbacks(callbacks):
-    """Simulate training loop to show how callbacks work"""
+    """Simulate training loop to show how callbacks work."""
     print("\n=== Simulating Training Loop ===")
 
     # Mock training components
@@ -183,7 +184,7 @@ def simulate_training_with_callbacks(callbacks):
 
 
 def main():
-    """Main demo function"""
+    """Main demo function."""
     print("🔧 Custom Callback Format & Rules Demo")
     print("=" * 50)
 

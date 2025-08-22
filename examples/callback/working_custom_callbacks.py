@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+
 """Working custom callbacks for real LLaMA-Factory training.
+
 These can be used directly with YAML configuration files.
 """
 
@@ -14,9 +16,9 @@ if TYPE_CHECKING:
 
 
 class CompanyUploadMonitorCallback(TrainerCallback):
-    """Real working callback that monitors training and uploads metrics.
-    This demonstrates a practical use case for custom callbacks.
-    """
+    """Real working callback that monitors training and uploads metrics."""
+
+    """This demonstrates a practical use case for custom callbacks."""
 
     def __init__(
         self,
@@ -44,7 +46,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs,
     ):
-        """Called when training starts"""
+        """Called when training starts."""
         self.start_time = time.time()
         print(f"🚀 [COMPANY] Training started for project: {self.project_name}")
         print(f"   Model: {getattr(args, 'output_dir', 'Unknown')}")
@@ -59,7 +61,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
-        """Called when metrics are logged"""
+        """Called when metrics are logged."""
         print(f"[DEBUG] on_log called in CompanyUploadMonitorCallback, logs={logs}")
         if logs is None:
             return
@@ -97,7 +99,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
-        """Called after evaluation"""
+        """Called after evaluation."""
         if logs:
             print(f"📈 [COMPANY] Evaluation at step {state.global_step}")
             print(f"   Eval loss: {logs.get('eval_loss', 'N/A')}")
@@ -112,7 +114,7 @@ class CompanyUploadMonitorCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs,
     ):
-        """Called when training ends"""
+        """Called when training ends."""
         if self.start_time:
             total_time = time.time() - self.start_time
             print(f"🏁 [COMPANY] Training completed for project: {self.project_name}")
@@ -143,7 +145,7 @@ class SmartEarlyStoppingCallback(TrainerCallback):
         logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
-        """Check for early stopping conditions"""
+        """Check for early stopping conditions."""
         if logs is None:
             return control
 
@@ -201,7 +203,7 @@ class ModelAnalysisCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs,
     ):
-        """Analyze model at specified intervals"""
+        """Analyze model at specified intervals."""
         self.step_count += 1
 
         if self.step_count % self.analysis_steps == 0:
@@ -264,7 +266,7 @@ class EnvironmentAwareCallback(TrainerCallback):
         logs: Optional[dict[str, float]] = None,
         **kwargs,
     ):
-        """Log with environment-based configuration"""
+        """Log with environment-based configuration."""
         if logs and self.debug_mode:
             print(f"🐛 [DEBUG {self.company_name}] Detailed logging at step {state.global_step}")
             for key, value in logs.items():

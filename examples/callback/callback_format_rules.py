@@ -29,7 +29,7 @@ class MyCompanyMetricsCallback(TrainerCallback):
         upload_every: int = 50,  # Optional parameter with default
         project_name: str = "llama-training",  # Optional with default
     ):
-        """RULE 2: Constructor receives parameters from YAML configuration
+        """RULE 2: Constructor receives parameters from YAML configuration.
 
         YAML Example:
         custom_callbacks:
@@ -54,7 +54,7 @@ class MyCompanyMetricsCallback(TrainerCallback):
         logs: Optional[dict[str, float]] = None,
         **kwargs,  # Additional context (model, tokenizer, etc.)
     ):
-        """RULE 3: Override specific lifecycle methods
+        """RULE 3: Override specific lifecycle methods.
 
         Available methods:
         - on_train_begin, on_train_end
@@ -83,17 +83,18 @@ class MyCompanyMetricsCallback(TrainerCallback):
 
 class SmartEarlyStoppingCallback(TrainerCallback):
     """Example callback that controls training flow.
+
     Shows how callbacks can stop training based on custom logic.
     """
 
     def __init__(self, loss_threshold: float = 5.0, patience: int = 3):
-        """Parameters automatically injected from YAML args section"""
+        """Parameters automatically injected from YAML args section."""
         self.loss_threshold = loss_threshold
         self.patience = patience
         self.bad_epochs = 0
 
     def on_evaluate(self, args, state, control, logs=None, **kwargs):
-        """RULE 4: Can modify TrainerControl to influence training behavior
+        """RULE 4: Can modify TrainerControl to influence training behavior.
 
         TrainerControl properties:
         - should_training_stop: Stop training
@@ -121,6 +122,7 @@ class SmartEarlyStoppingCallback(TrainerCallback):
 
 class ModelInspectionCallback(TrainerCallback):
     """Example callback that accesses model and training context.
+
     Shows how to get additional information beyond basic metrics.
     """
 
@@ -128,7 +130,7 @@ class ModelInspectionCallback(TrainerCallback):
         self.inspect_every = inspect_every
 
     def on_step_end(self, args, state, control, **kwargs):
-        """RULE 5: Access model and other components via kwargs
+        """RULE 5: Access model and other components via kwargs.
 
         Available in kwargs:
         - model: The model being trained
@@ -204,7 +206,7 @@ STEP 4: Callbacks will be automatically loaded and executed during training!
 
 
 class ConditionalCallback(TrainerCallback):
-    """Shows how to create callbacks that adapt based on training state"""
+    """Shows how to create callbacks that adapt based on training state."""
 
     def __init__(self, enable_after_step: int = 1000):
         self.enable_after_step = enable_after_step
@@ -224,7 +226,7 @@ class ConditionalCallback(TrainerCallback):
 
 
 class ErrorHandlingCallback(TrainerCallback):
-    """Shows best practices for error handling in callbacks"""
+    """Shows best practices for error handling in callbacks."""
 
     def __init__(self, fail_gracefully: bool = True):
         self.fail_gracefully = fail_gracefully

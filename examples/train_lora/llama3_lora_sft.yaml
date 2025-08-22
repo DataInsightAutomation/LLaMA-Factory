@@ -63,7 +63,7 @@ callbacks:
       loss_threshold: 3.0  # Stop if eval loss goes above 3.0
       patience: 2          # Wait 2 evaluations before stopping
 
-  # Example 3: Model analysis for debugging and monitoring  
+  # Example 3: Model analysis for debugging and monitoring
   - name: "examples.working_custom_callbacks.ModelAnalysisCallback"
     args:
       analysis_steps: 50   # Analyze model every 50 steps

@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from transformers import EarlyStoppingCallback, TrainerCallback
 
 from ..extras import logging
-from .callbacks import LogCallback, PissaConvertCallback, ReporterCallback
 from ..hparams import get_train_args
+from .callbacks import LogCallback, PissaConvertCallback, ReporterCallback
 
 
 if TYPE_CHECKING:
@@ -197,6 +197,7 @@ def register_builtin_callbacks():
     CallbackRegistry.register_builtin("reporter", ReporterCallback)
     CallbackRegistry.register_builtin("early_stopping", EarlyStoppingCallback)
 
+
 def load_callbacks_from_config(
     callback_configs: list[Union[str, dict[str, Any]]],
     model_args: Optional["ModelArguments"] = None,
@@ -292,7 +293,6 @@ def get_all_callbacks(args=None):
     Accepts a single args (dict or Namespace) and always derives detailed arguments from it.
     If training_args.custom_callbacks_only is True, only custom callbacks are returned.
     """
-
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
     custom_callbacks = []
     if hasattr(finetuning_args, "callbacks") and finetuning_args.callbacks:
