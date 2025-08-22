@@ -27,6 +27,26 @@ if TYPE_CHECKING:
 
 logger = logging.get_logger(__name__)
 
+# Track whether built-in callbacks have been registered. We prefer lazy
+# registration to avoid import-time side-effects (heavy imports, IO,
+# or circular imports) and to make the module easier to test.
+_builtin_callbacks_registered = False
+
+def ensure_builtin_callbacks_registered() -> None:
+    """Ensure built-in callbacks are registered exactly once.
+
+    This defers the import-time work until the registry is actually used.
+    """
+    global _builtin_callbacks_registered
+    if _builtin_callbacks_registered:
+        return
+    try:
+        register_builtin_callbacks()
+    finally:
+        # Mark as registered even if registration raised; prevents
+        # repeated attempts which could repeatedly re-trigger errors.
+        _builtin_callbacks_registered = True
+
 
 class CallbackRegistry:
     """Registry for managing callback plugins that can be loaded from configuration."""
@@ -52,6 +72,11 @@ class CallbackRegistry:
     @classmethod
     def get_callback(cls, name: str) -> Type[TrainerCallback]:
         """Get a callback class by name or file path."""
+        # Ensure built-in callbacks are registered before attempting to
+        # resolve any names. This avoids import-time side-effects while
+        # still making built-ins available when the registry is used.
+        ensure_builtin_callbacks_registered()
+
         if name in cls._registry:
             return cls._registry[name]
 
@@ -95,35 +120,46 @@ class CallbackRegistry:
         import sys
         import os
         sys.path.insert(0, os.path.abspath('.'))
-        """Create a callback instance with the given arguments."""
-        print(name,'get_callback name')
+
+        """Create a callback instance with the given arguments.
+
+        This will attempt to resolve the callback class (possibly importing
+        user modules), inspect the constructor, and provide injected
+        arguments from the training args if available.
+        """
+        # Ensure built-ins are available when instantiating callbacks.
+        ensure_builtin_callbacks_registered()
+
+        logger.debug("create_callback: requested %s", name)
 
         callback_class = cls.get_callback(name)
-        print(callback_class,'callback_class')
+        logger.debug("create_callback: resolved class %s", getattr(callback_class, '__name__', str(callback_class)))
+
         args = args or {}
-        
+
         # Get constructor signature to inject appropriate arguments
         sig = inspect.signature(callback_class.__init__)
-        print(sig,'sig')
-        constructor_args = {}
-        
+        logger.debug("create_callback: signature %s", sig)
+        constructor_args: Dict[str, Any] = {}
+
         # Map common argument names
         arg_mapping = {
             'model_args': model_args,
-            'data_args': data_args, 
+            'data_args': data_args,
             'finetuning_args': finetuning_args,
             'generating_args': generating_args,
         }
-        print(sig.parameters,'sig.parameters')
+        logger.debug("create_callback: parameters %s", sig.parameters)
+
         # Add arguments that the constructor accepts
         for param_name in sig.parameters:
             if param_name == 'self':
                 continue
-            elif param_name in args:
+            if param_name in args:
                 constructor_args[param_name] = args[param_name]
             elif param_name in arg_mapping and arg_mapping[param_name] is not None:
                 constructor_args[param_name] = arg_mapping[param_name]
-        
+
         try:
             return callback_class(**constructor_args)
         except Exception as e:
@@ -205,6 +241,8 @@ def load_callbacks_from_config(
               log_level: "debug"
     """
     callbacks = []
+    # Ensure built-in callbacks are registered before loading any configs.
+    ensure_builtin_callbacks_registered()
     
     for config in callback_configs:
         if isinstance(config, str):
@@ -242,5 +280,6 @@ def load_callbacks_from_config(
     return callbacks
 
 
-# Initialize built-in callbacks on module import
-register_builtin_callbacks()
+# Note: built-in callbacks are registered lazily via
+# `ensure_builtin_callbacks_registered()` to avoid import-time
+# side-effects. Do not register them at import-time.

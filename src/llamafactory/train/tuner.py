@@ -35,7 +35,7 @@ from .ppo import run_ppo
 from .pt import run_pt
 from .rm import run_rm
 from .sft import run_sft
-from .trainer_utils import get_ray_trainer, get_swanlab_callback
+from .trainer_utils import get_ray_trainer, get_swanlab_callback, get_ray_callbacks
 
 
 if is_ray_available():
@@ -53,13 +53,15 @@ logger = logging.get_logger(__name__)
 def _training_function(config: dict[str, Any]) -> None:
     args = config.get("args")
     callbacks: list[Any] = config.get("callbacks", [])
+
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
 
     # Load callbacks from YAML configuration if specified
-    if hasattr(training_args, 'custom_callbacks') and training_args.custom_callbacks:
+    # if hasattr(training_args, 'custom_callbacks') and training_args.custom_callbacks:
+    if hasattr(training_args, 'callbacks') and training_args.callbacks:
         try:
             custom_callbacks = load_callbacks_from_config(
-                callback_configs=training_args.custom_callbacks,
+                callback_configs=training_args.callbacks,
                 model_args=model_args,
                 data_args=data_args,
                 # training_args=training_args,
@@ -74,7 +76,7 @@ def _training_function(config: dict[str, Any]) -> None:
     # raise ValueError(
     #     "Please specify `custom_callbacks` in training arguments to use custom callbacks."
     # ) 
-    # Add built-in callbacks (can be overridden by custom_callbacks_only flag)
+# Add built-in callbacks (can be overridden by custom_callbacks_only flag)
     if not getattr(training_args, 'custom_callbacks_only', False):
         callbacks.append(LogCallback())
         
@@ -114,23 +116,22 @@ def _training_function(config: dict[str, Any]) -> None:
         logger.warning(f"Failed to destroy process group: {e}.")
 
 
-def run_exp(args: Optional[dict[str, Any]] = None, callbacks: Optional[list["TrainerCallback"]] = None) -> None:
+def run_exp(args: Optional[dict[str, Any]] = None) -> None:
     args = read_args(args)
     if "-h" in args or "--help" in args:
         get_train_args(args)
 
     ray_args = get_ray_args(args)
-    callbacks = callbacks or []
     if ray_args.use_ray:
-        callbacks.append(RayTrainReportCallback())
+        # Collect any ray-specific callbacks and pass them through the train loop config.
         trainer = get_ray_trainer(
             training_function=_training_function,
-            train_loop_config={"args": args, "callbacks": callbacks},
+            train_loop_config={"args": args, "callbacks": get_ray_callbacks(ray_args)},
             ray_args=ray_args,
         )
         trainer.fit()
     else:
-        _training_function(config={"args": args, "callbacks": callbacks})
+        _training_function(config={"args": args})
 
 
 def export_model(args: Optional[dict[str, Any]] = None) -> None:

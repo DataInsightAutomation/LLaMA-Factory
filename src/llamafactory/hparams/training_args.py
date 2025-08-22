@@ -77,7 +77,7 @@ class RayArguments:
 class TrainingArguments(RayArguments, Seq2SeqTrainingArguments):
     r"""Arguments pertaining to the trainer."""
 
-    custom_callbacks: Optional[List[dict[str, Any]]] = field(
+    callbacks: Optional[List[dict[str, Any]]] = field(
         default=None,
         metadata={"help": "List of custom callback configurations to load during training."},
     )

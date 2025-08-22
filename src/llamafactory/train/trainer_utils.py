@@ -729,3 +729,21 @@ def get_ray_trainer(
         ),
     )
     return trainer
+
+
+def get_ray_callbacks(ray_args: "RayArguments") -> list[Any]:
+    """Return a list of Ray-specific TrainerCallbacks to attach when using Ray.
+
+    This centralizes Ray-only imports and makes testing easier.
+    """
+    callbacks: list[Any] = []
+    if not is_ray_available():
+        return callbacks
+
+    try:
+        from ray.train.huggingface.transformers import RayTrainReportCallback
+        callbacks.append(RayTrainReportCallback())
+    except Exception:
+        logger.warning("Ray is available but RayTrainReportCallback could not be created")
+
+    return callbacks
