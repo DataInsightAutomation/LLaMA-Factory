@@ -31,6 +31,7 @@ from ..base_trainer import BaseSequenceTrainer
 
 if TYPE_CHECKING:
     from torch.utils.data import Dataset
+    from transformers import ProcessorMixin
     from transformers.trainer import PredictionOutput
 
     from ...hparams import FinetuningArguments
@@ -51,16 +52,12 @@ class CustomSeq2SeqTrainer(BaseSequenceTrainer, Seq2SeqTrainer):
     ) -> None:
         # Initialize base trainer with common functionality
         BaseSequenceTrainer.__init__(
-            self, 
-            finetuning_args=finetuning_args, 
-            processor=processor, 
-            gen_kwargs=gen_kwargs,
-            **kwargs
+            self, finetuning_args=finetuning_args, processor=processor, gen_kwargs=gen_kwargs, **kwargs
         )
-        
+
         # Initialize Seq2SeqTrainer
         Seq2SeqTrainer.__init__(self, **kwargs)
-        
+
         if processor is not None:
             # avoid wrong loss under gradient accumulation
             # https://github.com/huggingface/transformers/pull/36044#issuecomment-2746657112

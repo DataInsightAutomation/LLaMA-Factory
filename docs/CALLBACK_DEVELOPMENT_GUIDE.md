@@ -25,35 +25,35 @@ class MyCallback(TrainerCallback):
     def on_train_begin(self, args, state, control, **kwargs):
         """Called at the beginning of training."""
         pass
-    
+
     def on_train_end(self, args, state, control, **kwargs):
         """Called at the end of training."""
         pass
-    
+
     def on_epoch_begin(self, args, state, control, **kwargs):
         """Called at the beginning of each epoch."""
         pass
-    
+
     def on_epoch_end(self, args, state, control, **kwargs):
         """Called at the end of each epoch."""
         pass
-    
+
     def on_step_begin(self, args, state, control, **kwargs):
         """Called at the beginning of each training step."""
         pass
-    
+
     def on_step_end(self, args, state, control, **kwargs):
         """Called at the end of each training step."""
         pass
-    
+
     def on_evaluate(self, args, state, control, **kwargs):
         """Called after evaluation."""
         pass
-    
+
     def on_log(self, args, state, control, logs=None, **kwargs):
         """Called when logging metrics."""
         pass
-    
+
     def on_save(self, args, state, control, **kwargs):
         """Called when saving the model."""
         pass
@@ -94,7 +94,7 @@ def on_log(self, args, state, control, logs=None, **kwargs):
     # control: TrainerControl (should_save, should_evaluate, etc.)
     # logs: Dict of metrics (loss, accuracy, etc.)
     # kwargs: Additional context (model, tokenizer, etc.)
-    
+
     print(f"Step: {state.global_step}")
     print(f"Learning Rate: {args.learning_rate}")
     print(f"Current Loss: {logs.get('train_loss', 'N/A')}")
@@ -108,15 +108,15 @@ def on_step_end(self, args, state, control, **kwargs):
     # Stop training early based on custom condition
     if some_condition:
         control.should_training_stop = True
-    
+
     # Force evaluation
     if state.global_step % 500 == 0:
         control.should_evaluate = True
-    
+
     # Force model saving
     if state.global_step % 1000 == 0:
         control.should_save = True
-    
+
     return control
 ```
 
@@ -127,7 +127,7 @@ Callbacks can access the model and other training components:
 def on_evaluate(self, args, state, control, **kwargs):
     model = kwargs.get('model')
     eval_dataloader = kwargs.get('eval_dataloader')
-    
+
     if model is not None:
         # Custom model analysis
         param_count = sum(p.numel() for p in model.parameters())
@@ -158,7 +158,7 @@ custom_callbacks:
   - name: "my_company.callbacks.monitoring.CompanyMonitoringCallback"
     args:
       endpoint: "https://monitor.company.com"
-  
+
   - name: "my_company.callbacks.evaluation.CustomEvaluationCallback"
     args:
       metrics: ["accuracy", "f1", "custom_metric"]
@@ -174,12 +174,12 @@ class MetricUploadCallback(TrainerCallback):
         self.api_key = api_key
         self.upload_interval = upload_interval
         self.step_count = 0
-    
+
     def on_log(self, args, state, control, logs=None, **kwargs):
         if logs and self.step_count % self.upload_interval == 0:
             self._upload_metrics(logs, state.global_step)
         self.step_count += 1
-    
+
     def _upload_metrics(self, logs, step):
         # Implementation details...
         pass
@@ -191,13 +191,13 @@ class CustomEvaluationCallback(TrainerCallback):
     def __init__(self, eval_steps: int = 500, custom_metrics: list = None):
         self.eval_steps = eval_steps
         self.custom_metrics = custom_metrics or []
-    
+
     def on_step_end(self, args, state, control, **kwargs):
         if state.global_step % self.eval_steps == 0:
             # Trigger custom evaluation
             control.should_evaluate = True
             return control
-    
+
     def on_evaluate(self, args, state, control, **kwargs):
         # Perform custom evaluation logic
         model = kwargs.get('model')
@@ -212,15 +212,15 @@ class SmartEarlyStoppingCallback(TrainerCallback):
         self.min_delta = min_delta
         self.best_metric = None
         self.wait_count = 0
-    
+
     def on_evaluate(self, args, state, control, logs=None, **kwargs):
         if logs is None:
             return
-        
+
         current_metric = logs.get('eval_loss')
         if current_metric is None:
             return
-        
+
         if self.best_metric is None or current_metric < self.best_metric - self.min_delta:
             self.best_metric = current_metric
             self.wait_count = 0
@@ -229,7 +229,7 @@ class SmartEarlyStoppingCallback(TrainerCallback):
             if self.wait_count >= self.patience:
                 logger.info(f"Early stopping at step {state.global_step}")
                 control.should_training_stop = True
-        
+
         return control
 ```
 
@@ -255,7 +255,7 @@ class ValidatedCallback(TrainerCallback):
             raise ValueError("required_param cannot be empty")
         if optional_param <= 0:
             raise ValueError("optional_param must be positive")
-        
+
         self.required_param = required_param
         self.optional_param = optional_param
 ```
@@ -272,14 +272,14 @@ class TestMyCallback(unittest.TestCase):
     def test_callback_initialization(self):
         callback = MyCallback(param1="value1")
         self.assertEqual(callback.param1, "value1")
-    
+
     def test_on_log_behavior(self):
         callback = MyCallback()
         args = Mock(spec=TrainingArguments)
         state = Mock(spec=TrainerState)
         control = Mock(spec=TrainerControl)
         logs = {"train_loss": 0.5}
-        
+
         # Test callback behavior
         result = callback.on_log(args, state, control, logs=logs)
         # Assert expected behavior

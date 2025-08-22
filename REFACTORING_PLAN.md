@@ -46,7 +46,7 @@ class CustomSeq2SeqTrainer(BaseSequenceTrainer, Seq2SeqTrainer):  # Minimal code
 def run_sft(...):
     # Setup code (60+ lines)
     trainer = CustomSeq2SeqTrainer(...)
-    
+
     # Training (30+ lines of duplicated logic)
     if training_args.do_train:
         train_result = trainer.train(...)
@@ -54,13 +54,13 @@ def run_sft(...):
         trainer.log_metrics("train", train_result.metrics)
         trainer.save_metrics("train", train_result.metrics)
         # ... more duplicated code
-    
+
     # Evaluation (10+ lines of duplicated logic)  
     if training_args.do_eval:
         metrics = trainer.evaluate(...)
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
-    
+
     # Prediction (15+ lines of duplicated logic)
     if training_args.do_predict:
         # ... duplicated code
@@ -71,11 +71,11 @@ def run_sft(...):
 def run_sft(...):
     # Setup code (same ~60 lines)
     trainer = CustomSeq2SeqTrainer(...)
-    
+
     # All workflow logic handled by base class (1 line!)
     trainer.run_training_workflow(
         model_args=model_args,
-        data_args=data_args, 
+        data_args=data_args,
         training_args=training_args,
         finetuning_args=finetuning_args,
         generating_args=generating_args,
@@ -92,7 +92,7 @@ Instead of hardcoding stage-specific logic in workflow functions, use callbacks:
 # Stage-specific callbacks for custom behavior
 callbacks = [
     TrainingStageCallback(stage="sft"),
-    MetricsCallback(stage="sft"), 
+    MetricsCallback(stage="sft"),
     EvaluationCallback(generating_args=generating_args),
     PredictionCallback(dataset_module=dataset_module)
 ]
@@ -156,7 +156,7 @@ def run_sft(model_args, data_args, training_args, finetuning_args, generating_ar
     # Standard setup (same as before)
     tokenizer_module = load_tokenizer(model_args)
     # ... other setup ...
-    
+
     # Create trainer with base class functionality
     trainer = CustomSeq2SeqTrainer(
         model=model,
@@ -166,12 +166,12 @@ def run_sft(model_args, data_args, training_args, finetuning_args, generating_ar
         callbacks=callbacks,
         # ... other args
     )
-    
+
     # One-line workflow execution!
     trainer.run_training_workflow(
         model_args=model_args,
         data_args=data_args,
-        training_args=training_args, 
+        training_args=training_args,
         finetuning_args=finetuning_args,
         generating_args=generating_args,
         dataset_module=dataset_module,

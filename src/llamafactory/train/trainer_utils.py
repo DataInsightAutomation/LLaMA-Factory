@@ -742,6 +742,7 @@ def get_ray_callbacks(ray_args: "RayArguments") -> list[Any]:
 
     try:
         from ray.train.huggingface.transformers import RayTrainReportCallback
+
         callbacks.append(RayTrainReportCallback())
     except Exception:
         logger.warning("Ray is available but RayTrainReportCallback could not be created")

@@ -14,11 +14,11 @@
 
 import os
 import shutil
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any, Optional
 
 import torch
 import torch.distributed as dist
-from transformers import EarlyStoppingCallback, PreTrainedModel
+from transformers import PreTrainedModel
 
 from ..data import get_template_and_fix_tokenizer
 from ..extras import logging
@@ -27,24 +27,18 @@ from ..extras.misc import infer_optim_dtype
 from ..extras.packages import is_ray_available
 from ..hparams import get_infer_args, get_ray_args, get_train_args, read_args
 from ..model import load_model, load_tokenizer
-from .callbacks import LogCallback, PissaConvertCallback, ReporterCallback
-from .callback_registry import load_callbacks_from_config
+from .callback_registry import get_all_callbacks
 from .dpo import run_dpo
 from .kto import run_kto
 from .ppo import run_ppo
 from .pt import run_pt
 from .rm import run_rm
 from .sft import run_sft
-from .trainer_utils import get_ray_trainer, get_swanlab_callback, get_ray_callbacks
+from .trainer_utils import get_ray_callbacks, get_ray_trainer
 
 
 if is_ray_available():
     import ray
-    from ray.train.huggingface.transformers import RayTrainReportCallback
-
-
-if TYPE_CHECKING:
-    from transformers import TrainerCallback
 
 
 logger = logging.get_logger(__name__)
@@ -56,40 +50,7 @@ def _training_function(config: dict[str, Any]) -> None:
 
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
 
-    # Load callbacks from YAML configuration if specified
-    # if hasattr(training_args, 'custom_callbacks') and training_args.custom_callbacks:
-    if hasattr(training_args, 'callbacks') and training_args.callbacks:
-        try:
-            custom_callbacks = load_callbacks_from_config(
-                callback_configs=training_args.callbacks,
-                model_args=model_args,
-                data_args=data_args,
-                # training_args=training_args,
-                finetuning_args=finetuning_args,
-                generating_args=generating_args,
-            )
-            callbacks.extend(custom_callbacks)
-            logger.info(f"Loaded {len(custom_callbacks)} custom callbacks from configuration")
-        except Exception as e:
-            logger.error(f"Failed to load custom callbacks: {e}")
-            # Continue with built-in callbacks only
-    # raise ValueError(
-    #     "Please specify `custom_callbacks` in training arguments to use custom callbacks."
-    # ) 
-# Add built-in callbacks (can be overridden by custom_callbacks_only flag)
-    if not getattr(training_args, 'custom_callbacks_only', False):
-        callbacks.append(LogCallback())
-        
-        if finetuning_args.pissa_convert:
-            callbacks.append(PissaConvertCallback())
-
-        if finetuning_args.use_swanlab:
-            callbacks.append(get_swanlab_callback(finetuning_args))
-
-        if finetuning_args.early_stopping_steps is not None:
-            callbacks.append(EarlyStoppingCallback(early_stopping_patience=finetuning_args.early_stopping_steps))
-
-        callbacks.append(ReporterCallback(model_args, data_args, finetuning_args, generating_args))  # add to last
+    callbacks.extend(get_all_callbacks(args))
 
     if finetuning_args.stage == "pt":
         run_pt(model_args, data_args, training_args, finetuning_args, callbacks)
@@ -180,7 +141,7 @@ def export_model(args: Optional[dict[str, Any]] = None) -> None:
             token=model_args.hf_hub_token,
             max_shard_size=f"{model_args.export_size}GB",
             safe_serialization=(not model_args.export_legacy_format),
-            private=model_args.export_hub_private
+            private=model_args.export_hub_private,
         )
 
     if finetuning_args.stage == "rm":
@@ -207,12 +168,18 @@ def export_model(args: Optional[dict[str, Any]] = None) -> None:
         tokenizer.init_kwargs["padding_side"] = "left"
         tokenizer.save_pretrained(model_args.export_dir)
         if model_args.export_hub_model_id is not None:
-            tokenizer.push_to_hub(model_args.export_hub_model_id, token=model_args.hf_hub_token, private=model_args.export_hub_private)
+            tokenizer.push_to_hub(
+                model_args.export_hub_model_id, token=model_args.hf_hub_token, private=model_args.export_hub_private
+            )
 
         if processor is not None:
             processor.save_pretrained(model_args.export_dir)
             if model_args.export_hub_model_id is not None:
-                processor.push_to_hub(model_args.export_hub_model_id, token=model_args.hf_hub_token, private=model_args.export_hub_private)
+                processor.push_to_hub(
+                    model_args.export_hub_model_id,
+                    token=model_args.hf_hub_token,
+                    private=model_args.export_hub_private,
+                )
 
     except Exception as e:
         logger.warning_rank0(f"Cannot save tokenizer, please copy the files manually: {e}.")

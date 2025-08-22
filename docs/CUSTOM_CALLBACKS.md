@@ -19,12 +19,12 @@ custom_callbacks:
   # Simple format - just callback name (uses defaults)
   - "log"
   - "early_stopping"
-  
+
   # Advanced format - with custom arguments
   - name: "training_stage"
     args:
       stage: "sft"
-  
+
   # External/custom callbacks
   - name: "callbacks.company.upload_monitor_to_new_platform"
     args:
@@ -76,7 +76,7 @@ class MyCompanyCallback(TrainerCallback):
     def __init__(self, upload_url: str, api_key: Optional[str] = None):
         self.upload_url = upload_url
         self.api_key = api_key
-    
+
     def on_log(self, args, state, control, logs=None, **kwargs):
         # Your custom logic here
         print(f"Uploading to {self.upload_url}: {logs}")
@@ -179,7 +179,7 @@ custom_callbacks:
   - name: "early_stopping"
     args:
       early_stopping_patience: 3
-  
+
   # Custom callbacks
   - "my_company.callbacks.MonitorCallback"
   - name: "my_company.callbacks.AlertCallback"
@@ -241,7 +241,7 @@ You can create a callback discovery mechanism:
 # In your company package
 def register_company_callbacks():
     from llamafactory.train.callback_registry import CallbackRegistry
-    
+
     # Auto-register all company callbacks
     CallbackRegistry.register("company.monitor", MonitorCallback)
     CallbackRegistry.register("company.alert", AlertCallback)
@@ -259,7 +259,7 @@ custom_callbacks:
   - name: "callbacks.company.production_monitor"
     args:
       enabled: "${PRODUCTION_MODE:-false}"
-  
+
   # Development-only callbacks  
   - name: "callbacks.debug.detailed_profiler"
     args:
