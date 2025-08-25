@@ -13,6 +13,10 @@ from transformers import TrainerCallback, TrainerControl, TrainerState
 
 if TYPE_CHECKING:
     from transformers import TrainingArguments
+from src.llamafactory.extras import logging
+
+
+logger = logging.get_logger("llamafactory.callbacks.working_custom_callbacks")
 
 
 class DemoUploadMonitorCallBack(TrainerCallback):
@@ -34,10 +38,10 @@ class DemoUploadMonitorCallBack(TrainerCallback):
         self.step_count = 0
         self.start_time = None
 
-        print("🔧 DemoUploadMonitorCallBack initialized:")
-        print(f"   Project: {self.project_name}")
-        print(f"   Upload URL: {self.upload_url}")
-        print(f"   Upload interval: {self.upload_interval} steps")
+        logger.info("🔧 DemoUploadMonitorCallBack initialized:")
+        logger.info(f"   Project: {self.project_name}")
+        logger.info(f"   Upload URL: {self.upload_url}")
+        logger.info(f"   Upload interval: {self.upload_interval} steps")
 
     def on_train_begin(
         self,
@@ -48,10 +52,10 @@ class DemoUploadMonitorCallBack(TrainerCallback):
     ):
         """Called when training starts."""
         self.start_time = time.time()
-        print(f"🚀 [COMPANY] Training started for project: {self.project_name}")
-        print(f"   Model: {getattr(args, 'output_dir', 'Unknown')}")
-        print(f"   Total epochs: {args.num_train_epochs}")
-        print("[DEBUG] on_train_begin called in DemoUploadMonitorCallBack")
+        logger.info(f"🚀 [COMPANY] Training started for project: {self.project_name}")
+        logger.info(f"   Model: {getattr(args, 'output_dir', 'Unknown')}")
+        logger.info(f"   Total epochs: {args.num_train_epochs}")
+        logger.debug("[DEBUG] on_train_begin called in DemoUploadMonitorCallBack")
 
     def on_log(
         self,
@@ -62,7 +66,7 @@ class DemoUploadMonitorCallBack(TrainerCallback):
         **kwargs,
     ):
         """Called when metrics are logged."""
-        print(f"[DEBUG] on_log called in DemoUploadMonitorCallBack, logs={logs}")
+        logger.debug(f"[DEBUG] on_log called in DemoUploadMonitorCallBack, logs={logs}")
         if logs is None:
             return
 
@@ -71,13 +75,12 @@ class DemoUploadMonitorCallBack(TrainerCallback):
         # Upload metrics at specified intervals
         if self.step_count % self.upload_interval == 0:
             elapsed_time = time.time() - self.start_time if self.start_time else 0
-
             # Simulate uploading to company monitoring system
-            print(f"📊 [COMPANY] Uploading metrics at step {state.global_step}")
-            print(f"   Project: {self.project_name}")
-            print(f"   Elapsed time: {elapsed_time:.1f}s")
-            print(f"   Current loss: {logs.get('train_loss', 'N/A')}")
-            print(f"   Learning rate: {logs.get('learning_rate', 'N/A')}")
+            logger.info(f"📊 [COMPANY] Uploading metrics at step {state.global_step}")
+            logger.info(f"   Project: {self.project_name}")
+            logger.info(f"   Elapsed time: {elapsed_time:.1f}s")
+            logger.info(f"   Current loss: {logs.get('train_loss', 'N/A')}")
+            logger.info(f"   Learning rate: {logs.get('learning_rate', 'N/A')}")
 
             # In a real implementation, you would make an HTTP request here:
             # import requests
@@ -101,11 +104,11 @@ class DemoUploadMonitorCallBack(TrainerCallback):
     ):
         """Called after evaluation."""
         if logs:
-            print(f"📈 [COMPANY] Evaluation at step {state.global_step}")
-            print(f"   Eval loss: {logs.get('eval_loss', 'N/A')}")
+            logger.info(f"📈 [COMPANY] Evaluation at step {state.global_step}")
+            logger.info(f"   Eval loss: {logs.get('eval_loss', 'N/A')}")
             if "eval_loss" in logs and "train_loss" in logs:
                 gap = logs["eval_loss"] - logs["train_loss"]
-                print(f"   Train/Eval gap: {gap:.4f}")
+                logger.info(f"   Train/Eval gap: {gap:.4f}")
 
     def on_train_end(
         self,
@@ -117,10 +120,10 @@ class DemoUploadMonitorCallBack(TrainerCallback):
         """Called when training ends."""
         if self.start_time:
             total_time = time.time() - self.start_time
-            print(f"🏁 [COMPANY] Training completed for project: {self.project_name}")
-            print(f"   Total time: {total_time:.1f}s")
-            print(f"   Total steps: {state.global_step}")
-            print(f"   Final epoch: {state.epoch:.2f}")
+            logger.info(f"🏁 [COMPANY] Training completed for project: {self.project_name}")
+            logger.info(f"   Total time: {total_time:.1f}s")
+            logger.info(f"   Total steps: {state.global_step}")
+            logger.info(f"   Final epoch: {state.epoch:.2f}")
 
 
 class SmartEarlyStoppingCallback(TrainerCallback):
@@ -133,9 +136,9 @@ class SmartEarlyStoppingCallback(TrainerCallback):
         self.best_eval_loss = float("inf")
         self.no_improvement_count = 0
 
-        print("🛑 SmartEarlyStoppingCallback initialized:")
-        print(f"   Loss threshold: {self.loss_threshold}")
-        print(f"   Patience: {self.patience}")
+        logger.info("🛑 SmartEarlyStoppingCallback initialized:")
+        logger.info(f"   Loss threshold: {self.loss_threshold}")
+        logger.info(f"   Patience: {self.patience}")
 
     def on_evaluate(
         self,
@@ -153,26 +156,25 @@ class SmartEarlyStoppingCallback(TrainerCallback):
         if eval_loss is None:
             return control
 
-        print(f"🔍 [SMART STOP] Checking early stopping at step {state.global_step}")
-        print(f"   Current eval loss: {eval_loss:.4f}")
-        print(f"   Best eval loss: {self.best_eval_loss:.4f}")
+        logger.info(f"🔍 [SMART STOP] Checking early stopping at step {state.global_step}")
+        logger.info(f"   Current eval loss: {eval_loss:.4f}")
+        logger.info(f"   Best eval loss: {self.best_eval_loss:.4f}")
 
         # Check for improvement
         if eval_loss < self.best_eval_loss:
             self.best_eval_loss = eval_loss
             self.no_improvement_count = 0
-            print("   ✅ New best eval loss! Reset patience counter.")
+            logger.info("   ✅ New best eval loss! Reset patience counter.")
         else:
             self.no_improvement_count += 1
-            print(f"   ⚠️  No improvement ({self.no_improvement_count}/{self.patience})")
+            logger.info(f"   ⚠️  No improvement ({self.no_improvement_count}/{self.patience})")
 
         # Check loss threshold
         if eval_loss > self.loss_threshold:
             self.high_loss_count += 1
-            print(f"   🚨 High loss detected! Count: {self.high_loss_count}")
-
+            logger.warning(f"   🚨 High loss detected! Count: {self.high_loss_count}")
             if self.high_loss_count >= 2:
-                print(f"   🛑 Stopping: Loss {eval_loss:.4f} > threshold {self.loss_threshold}")
+                logger.error(f"   🛑 Stopping: Loss {eval_loss:.4f} > threshold {self.loss_threshold}")
                 control.should_training_stop = True
                 return control
         else:
@@ -180,7 +182,7 @@ class SmartEarlyStoppingCallback(TrainerCallback):
 
         # Check patience
         if self.no_improvement_count >= self.patience:
-            print(f"   🛑 Stopping: No improvement for {self.patience} evaluations")
+            logger.error(f"   🛑 Stopping: No improvement for {self.patience} evaluations")
             control.should_training_stop = True
 
         return control
@@ -193,8 +195,8 @@ class ModelAnalysisCallback(TrainerCallback):
         self.analysis_steps = analysis_steps
         self.step_count = 0
 
-        print("🔍 ModelAnalysisCallback initialized:")
-        print(f"   Analysis every {self.analysis_steps} steps")
+        logger.info("🔍 ModelAnalysisCallback initialized:")
+        logger.info(f"   Analysis every {self.analysis_steps} steps")
 
     def on_step_end(
         self,
@@ -210,33 +212,32 @@ class ModelAnalysisCallback(TrainerCallback):
             model = kwargs.get("model")
             optimizer = kwargs.get("optimizer")
 
-            print(f"🔬 [MODEL ANALYSIS] Step {state.global_step}")
+            logger.info(f"🔬 [MODEL ANALYSIS] Step {state.global_step}")
 
             if model is not None:
                 # Count parameters
                 total_params = sum(p.numel() for p in model.parameters())
                 trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-                print("   📊 Parameters:")
-                print(f"      Total: {total_params:,}")
-                print(f"      Trainable: {trainable_params:,} ({trainable_params/total_params:.1%})")
+                logger.info("   📊 Parameters:")
+                logger.info(f"      Total: {total_params:,}")
+                logger.info(f"      Trainable: {trainable_params:,} ({trainable_params/total_params:.1%})")
 
                 # Check for NaN/inf parameters
                 nan_params = sum(1 for p in model.parameters() if p.data.isnan().any())
                 inf_params = sum(1 for p in model.parameters() if p.data.isinf().any())
 
                 if nan_params > 0 or inf_params > 0:
-                    print(f"   ⚠️  Warning: NaN params: {nan_params}, Inf params: {inf_params}")
+                    logger.warning(f"   ⚠️  Warning: NaN params: {nan_params}, Inf params: {inf_params}")
                 else:
-                    print("   ✅ All parameters healthy")
+                    logger.info("   ✅ All parameters healthy")
 
             if optimizer is not None:
                 # Get current learning rate
                 lr = optimizer.param_groups[0].get("lr", "N/A")
-                print(f"   📈 Learning rate: {lr}")
-
+                logger.info(f"   📈 Learning rate: {lr}")
                 # Check optimizer state
-                print(f"   🔧 Optimizer: {type(optimizer).__name__}")
+                logger.info(f"   🔧 Optimizer: {type(optimizer).__name__}")
 
 
 # Demo callback that shows environment variable usage
@@ -253,10 +254,10 @@ class EnvironmentAwareCallback(TrainerCallback):
         self.log_file = log_file
         self.company_name = company_name
 
-        print("🌍 EnvironmentAwareCallback initialized:")
-        print(f"   Company: {self.company_name}")
-        print(f"   Debug mode: {self.debug_mode}")
-        print(f"   Log file: {self.log_file}")
+        logger.info("🌍 EnvironmentAwareCallback initialized:")
+        logger.info(f"   Company: {self.company_name}")
+        logger.info(f"   Debug mode: {self.debug_mode}")
+        logger.info(f"   Log file: {self.log_file}")
 
     def on_log(
         self,
@@ -268,9 +269,9 @@ class EnvironmentAwareCallback(TrainerCallback):
     ):
         """Log with environment-based configuration."""
         if logs and self.debug_mode:
-            print(f"🐛 [DEBUG {self.company_name}] Detailed logging at step {state.global_step}")
+            logger.debug(f"🐛 [DEBUG {self.company_name}] Detailed logging at step {state.global_step}")
             for key, value in logs.items():
-                print(f"      {key}: {value}")
+                logger.debug(f"      {key}: {value}")
 
         # Write to log file
         if logs:
@@ -278,17 +279,17 @@ class EnvironmentAwareCallback(TrainerCallback):
                 with open(self.log_file, "a") as f:
                     f.write(f"[{self.company_name}] Step {state.global_step}: {logs}\n")
             except Exception as e:
-                print(f"   ⚠️  Failed to write to log file: {e}")
+                logger.warning(f"   ⚠️  Failed to write to log file: {e}")
 
 
 if __name__ == "__main__":
-    print("🔧 Custom callbacks for LLaMA-Factory are ready!")
-    print("These callbacks can be used in YAML configuration files:")
-    print()
-    print("custom_callbacks:")
-    print("  - name: 'examples.custom_callbacks.DemoUploadMonitorCallBack'")
-    print("    args:")
-    print("      project_name: 'my-experiment'")
-    print("      upload_interval: 50")
-    print()
-    print("Then run: llamafactory-cli train your_config.yaml")
+    logger.info("🔧 Custom callbacks for LLaMA-Factory are ready!")
+    logger.info("These callbacks can be used in YAML configuration files:")
+    logger.info("")
+    logger.info("custom_callbacks:")
+    logger.info("  - name: 'examples.custom_callbacks.DemoUploadMonitorCallBack'")
+    logger.info("    args:")
+    logger.info("      project_name: 'my-experiment'")
+    logger.info("      upload_interval: 50")
+    logger.info("")
+    logger.info("Then run: llamafactory-cli train your_config.yaml")

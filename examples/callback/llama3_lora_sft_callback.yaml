@@ -38,24 +38,25 @@ bf16: false
 ddp_timeout: 180000000
 resume_from_checkpoint: null
 
-### eval
-# eval_dataset: alpaca_en_demo
-# val_size: 0.1
-# per_device_eval_batch_size: 1
-# eval_strategy: steps
-# eval_steps: 500
-
-### custom callbacks - NEW FEATURE!
-# custom_callbacks:
 callbacks:
-  # Example 1: Company monitoring callback for real metrics tracking
-  # - name: "examples.working_custom_callbacks.DemoUploadMonitorCallBack"
+  # You can use either an absolute file path with :ClassName
+  # or a Python module path with .ClassName for custom callbacks.
+
+  # Example 1: Upload monitor callback (absolute path)
   - name: "/home/ubuntu/lun/llamafactory/LLaMA-Factory/examples/callback/working_custom_callbacks.py:DemoUploadMonitorCallBack"
     args:
       upload_url: "https://company-monitor.internal/api/metrics"
-      api_key: "${COMPANY_API_KEY:-demo_key}"  # Environment variable with fallback
+      api_key: "${COMPANY_API_KEY:-demo_key}"  # Uses env var COMPANY_API_KEY if set, else 'demo_key'
       project_name: "llama3-lora-sft-experiment"
-      upload_interval: 20  # Upload metrics every 20 steps (more frequent for demo)
+      upload_interval: 20  # Upload metrics every 20 steps
+
+  # Example 1b: (Alternative) Upload monitor callback (module path)
+  # - name: "examples.callback.working_custom_callbacks.DemoUploadMonitorCallBack"
+  #   args:
+  #     upload_url: "https://company-monitor.internal/api/metrics"
+  #     api_key: "${COMPANY_API_KEY:-demo_key}"
+  #     project_name: "llama3-lora-sft-experiment"
+  #     upload_interval: 20
 
   # Example 2: Smart early stopping based on evaluation loss
   - name: "examples.callback.working_custom_callbacks.SmartEarlyStoppingCallback"
@@ -73,7 +74,7 @@ callbacks:
     args:
       debug_mode: "${DEBUG_MODE:-false}"           # Set DEBUG_MODE=true for detailed logs
       log_file: "./llama3_training_detailed.log"
-      company_name: "${COMPANY_NAME:-MyCompany}"   # Set your company name
+      company_name: "${COMPANY_NAME:-MyCompany}"   # Uses env var COMPANY_NAME if set, else 'MyCompany'
 
 # Optional: Only use custom callbacks (disable built-in logging)
 # custom_callbacks_only: false
